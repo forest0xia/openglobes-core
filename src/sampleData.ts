@@ -197,6 +197,13 @@ export const OCEAN_DARK_THEME: GlobeTheme = {
   globeTexture: '//unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
   atmosphereColor: '#4fc3f7',
   backgroundColor: '#070d1f',
+  terrain: {
+    bumpMap: '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png',
+    bumpScale: 10,
+    specularMap: '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-water.png',
+    specular: 'grey',
+    shininess: 15,
+  },
 
   pointColor: (item) => {
     const r = item.rarity ?? 1;
