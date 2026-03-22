@@ -138,21 +138,22 @@ export default function GlobeScene({
     // Terrain: bump, specular, and displacement maps
     const terrain = theme.terrain;
     if (terrain) {
+      // Enhance globe material with terrain textures
+      // three-globe types return base Material, but runtime is MeshPhongMaterial
+      const globeMaterial = globe.globeMaterial() as MeshPhongMaterial;
+
       if (terrain.bumpMap) {
         globe.bumpImageUrl(terrain.bumpMap);
+        globeMaterial.bumpScale = terrain.bumpScale ?? 10;
       }
 
       // Increase polygon count when displacement is enabled
-      if (terrain.displacementScale && terrain.displacementScale > 0) {
+      const dScale = terrain.displacementScale;
+      if (dScale != null && dScale > 0) {
         globe.globeCurvatureResolution(terrain.curvatureResolution ?? 1);
       } else if (terrain.curvatureResolution) {
         globe.globeCurvatureResolution(terrain.curvatureResolution);
       }
-
-      // Enhance globe material with terrain textures
-      // three-globe types return base Material, but runtime is MeshPhongMaterial
-      const globeMaterial = globe.globeMaterial() as MeshPhongMaterial;
-      globeMaterial.bumpScale = terrain.bumpScale ?? 10;
 
       const textureLoader = new TextureLoader();
       const onTexError = (url: string) => (err: unknown) => {
@@ -168,10 +169,10 @@ export default function GlobeScene({
         }, undefined, onTexError(terrain.specularMap));
       }
 
-      if (terrain.displacementMap && terrain.displacementScale && terrain.displacementScale > 0) {
+      if (terrain.displacementMap && dScale != null && dScale > 0) {
         textureLoader.load(terrain.displacementMap, (texture) => {
           globeMaterial.displacementMap = texture;
-          globeMaterial.displacementScale = terrain.displacementScale!;
+          globeMaterial.displacementScale = dScale;
           globeMaterial.needsUpdate = true;
         }, undefined, onTexError(terrain.displacementMap));
       }
