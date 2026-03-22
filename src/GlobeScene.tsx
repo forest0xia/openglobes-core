@@ -7,6 +7,9 @@ import {
   DirectionalLight,
   Vector2,
   Raycaster,
+  TextureLoader,
+  Color,
+  MeshPhongMaterial,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import ThreeGlobe from 'three-globe';
@@ -131,6 +134,48 @@ export default function GlobeScene({
       .rendererSize(new Vector2(container.clientWidth, container.clientHeight));
     scene.add(globe);
     globeRef.current = globe;
+
+    // Terrain: bump, specular, and displacement maps
+    const terrain = theme.terrain;
+    if (terrain) {
+      if (terrain.bumpMap) {
+        globe.bumpImageUrl(terrain.bumpMap);
+      }
+
+      // Increase polygon count when displacement is enabled
+      if (terrain.displacementScale && terrain.displacementScale > 0) {
+        globe.globeCurvatureResolution(terrain.curvatureResolution ?? 1);
+      } else if (terrain.curvatureResolution) {
+        globe.globeCurvatureResolution(terrain.curvatureResolution);
+      }
+
+      // Enhance globe material with terrain textures
+      // three-globe types return base Material, but runtime is MeshPhongMaterial
+      const globeMaterial = globe.globeMaterial() as MeshPhongMaterial;
+      globeMaterial.bumpScale = terrain.bumpScale ?? 10;
+
+      const textureLoader = new TextureLoader();
+      const onTexError = (url: string) => (err: unknown) => {
+        console.warn(`[openglobes] Failed to load terrain texture: ${url}`, err);
+      };
+
+      if (terrain.specularMap) {
+        textureLoader.load(terrain.specularMap, (texture) => {
+          globeMaterial.specularMap = texture;
+          globeMaterial.specular = new Color(terrain.specular ?? 'grey');
+          globeMaterial.shininess = terrain.shininess ?? 15;
+          globeMaterial.needsUpdate = true;
+        }, undefined, onTexError(terrain.specularMap));
+      }
+
+      if (terrain.displacementMap && terrain.displacementScale && terrain.displacementScale > 0) {
+        textureLoader.load(terrain.displacementMap, (texture) => {
+          globeMaterial.displacementMap = texture;
+          globeMaterial.displacementScale = terrain.displacementScale!;
+          globeMaterial.needsUpdate = true;
+        }, undefined, onTexError(terrain.displacementMap));
+      }
+    }
 
     // Orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
