@@ -13,6 +13,7 @@ export type { GlobeSceneRefs } from './GlobeScene';
 // Theme types
 export type {
   GlobeTheme,
+  TerrainConfig,
   FilterConfig,
   DetailFieldConfig,
   Attribution,
