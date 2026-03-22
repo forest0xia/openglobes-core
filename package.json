@@ -31,7 +31,7 @@
     "3d",
     "visualization"
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "three": "^0.183.2",
     "three-globe": "^2.45.1"
