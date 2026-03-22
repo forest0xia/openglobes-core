@@ -54,6 +54,26 @@ export interface ExternalLink {
   url: string;
 }
 
+/** Terrain rendering configuration — bump, specular, and displacement maps. */
+export interface TerrainConfig {
+  /** URL to equirectangular height grayscale texture (white = high, black = low). */
+  bumpMap?: string;
+  /** Intensity of bump lighting effect. Default: 10. */
+  bumpScale?: number;
+  /** URL to specular map (white = shiny ocean, black = rough land). */
+  specularMap?: string;
+  /** Specular highlight color. Default: 'grey'. */
+  specular?: string;
+  /** Specular sharpness (higher = tighter highlights). Default: 15. */
+  shininess?: number;
+  /** URL to displacement texture (deforms geometry). Often same image as bumpMap. */
+  displacementMap?: string;
+  /** Vertex displacement amount. 0 = disabled. Values 3-5 = stylized exaggeration. Default: 0. */
+  displacementScale?: number;
+  /** Globe polygon density in degrees. Auto-set to 1 when displacement > 0. Lower = more polygons. */
+  curvatureResolution?: number;
+}
+
 /** Full theme interface — one per globe. */
 export interface GlobeTheme {
   id: string;
@@ -64,6 +84,8 @@ export interface GlobeTheme {
   globeTexture: string;
   atmosphereColor: string;
   backgroundColor: string;
+  /** Optional terrain rendering (bump, specular, displacement maps). */
+  terrain?: TerrainConfig;
 
   // Data layer styling
   pointColor: (item: PointItem) => string;
