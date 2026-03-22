@@ -55,15 +55,16 @@ All fields optional. Omitting `terrain` preserves current behavior (smooth spher
 
 ### GlobeScene Modifications
 
-After globe construction in `GlobeScene.tsx`:
+All terrain setup runs inside the mount `useEffect`, inserted **after `scene.add(globe)`** (line 132) and **before OrbitControls setup** (line 136). This timing is safe: `bumpImageUrl` is handled in the same update cycle as `globeImageUrl`, and manual `TextureLoader.load` calls for specular/displacement run asynchronously — the material already exists at this point.
 
-**Step 1 — Bump map** (if `terrain.bumpMap` provided):
-```typescript
-globe.bumpImageUrl(terrain.bumpMap);
-```
+Empty strings are treated as absent (no texture loaded).
 
-**Step 2 — Curvature resolution** (if displacement enabled):
+**Step 1 — Bump map & curvature resolution** (chained with globe construction if `terrain.bumpMap` is a non-empty string):
 ```typescript
+if (terrain.bumpMap) {
+  globe.bumpImageUrl(terrain.bumpMap);
+}
+
 if (terrain.displacementScale && terrain.displacementScale > 0) {
   globe.globeCurvatureResolution(terrain.curvatureResolution ?? 1);
 } else if (terrain.curvatureResolution) {
@@ -71,26 +72,38 @@ if (terrain.displacementScale && terrain.displacementScale > 0) {
 }
 ```
 
-**Step 3 — Material enhancement** (via `globe.globeMaterial()`):
+**Step 2 — Material enhancement** (via `globe.globeMaterial()`):
+
+Note: `bumpImageUrl()` loads the bump texture internally. We set `bumpScale` separately on the material — these are independent properties and do not conflict.
+
 ```typescript
 const globeMaterial = globe.globeMaterial();
 globeMaterial.bumpScale = terrain.bumpScale ?? 10;
 
+const textureLoader = new TextureLoader();
+const onError = (url: string) => (err: unknown) => {
+  console.warn(`[openglobes] Failed to load terrain texture: ${url}`, err);
+};
+
 if (terrain.specularMap) {
-  new TextureLoader().load(terrain.specularMap, (texture) => {
+  textureLoader.load(terrain.specularMap, (texture) => {
     globeMaterial.specularMap = texture;
     globeMaterial.specular = new Color(terrain.specular ?? 'grey');
     globeMaterial.shininess = terrain.shininess ?? 15;
-  });
+    globeMaterial.needsUpdate = true;
+  }, undefined, onError(terrain.specularMap));
 }
 
 if (terrain.displacementMap && terrain.displacementScale && terrain.displacementScale > 0) {
-  new TextureLoader().load(terrain.displacementMap, (texture) => {
+  textureLoader.load(terrain.displacementMap, (texture) => {
     globeMaterial.displacementMap = texture;
     globeMaterial.displacementScale = terrain.displacementScale!;
-  });
+    globeMaterial.needsUpdate = true;
+  }, undefined, onError(terrain.displacementMap));
 }
 ```
+
+**Cleanup:** Loaded textures are disposed when `globe._destructor()` runs, which disposes the material and its maps. No additional cleanup needed.
 
 ### New Three.js Imports
 
