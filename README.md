@@ -432,6 +432,16 @@ const myTheme: GlobeTheme = {
   globeTexture: '//unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
   atmosphereColor: '#4fc3f7',
   backgroundColor: '#070d1f',
+  terrain: {
+    bumpMap: '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png',
+    bumpScale: 10,
+    specularMap: '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-water.png',
+    specular: 'grey',
+    shininess: 15,
+    // Optional: vertex displacement for 3D terrain silhouette
+    // displacementMap: '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png',
+    // displacementScale: 5,
+  },
   pointColor: (item) => { /* rarity → color */ },
   pointSize: (item) => { /* rarity → radius */ },
   clusterColor: (count) => { /* count → color */ },
@@ -471,6 +481,38 @@ const [theme, setTheme] = useState(fishTheme);
 2. Create a `GlobeTheme` object with `id: 'myglobe'`
 3. Pass it to `<GlobeRoot theme={myTheme}>`
 4. Optionally override `.og-*` classes for deeper customization
+
+### Terrain
+
+Add realistic terrain to the globe via the optional `terrain` property on your theme. All fields are optional — omit `terrain` entirely for a smooth sphere.
+
+```tsx
+terrain: {
+  bumpMap: '/textures/earth-topology.png',       // height grayscale (equirectangular)
+  bumpScale: 10,                                  // bump lighting intensity
+  specularMap: '/textures/earth-water.png',       // shiny oceans, rough land
+  specular: 'grey',                               // highlight color
+  shininess: 15,                                  // highlight sharpness
+  displacementMap: '/textures/earth-topology.png', // actual vertex displacement
+  displacementScale: 5,                           // exaggeration factor (0 = disabled)
+  curvatureResolution: 1,                         // polygon density in degrees (auto when displacement > 0)
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `bumpMap` | `string` | — | URL to height grayscale texture |
+| `bumpScale` | `number` | `10` | Bump lighting intensity |
+| `specularMap` | `string` | — | White = shiny (ocean), black = rough (land) |
+| `specular` | `string` | `'grey'` | Specular highlight color |
+| `shininess` | `number` | `15` | Highlight sharpness |
+| `displacementMap` | `string` | — | Texture for vertex displacement |
+| `displacementScale` | `number` | `0` | Displacement amount. `0` = disabled. `3-5` = stylized exaggeration |
+| `curvatureResolution` | `number` | auto | Globe polygon density (degrees). Auto-set to `1` when displacement > 0 |
+
+**Free textures:** Three-globe ships `earth-topology.png` (bump) and `earth-water.png` (specular) on its CDN. For higher quality, use [NASA Visible Earth](https://visibleearth.nasa.gov/) 8K/16K textures.
+
+**Performance:** Bump + specular have zero GPU cost. Displacement with `curvatureResolution: 1` creates ~64k vertices (fine for desktop, use `2` for low-end mobile).
 
 ### CSS class targeting
 
